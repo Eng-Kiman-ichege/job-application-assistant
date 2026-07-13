@@ -1,0 +1,121 @@
+/* app/dashboard/dashboard.css */
+
+:root {
+  --sidebar-bg: #1e293b; /* slate-800 */
+  --sidebar-fg: #fafafa; /* white */
+  --sidebar-hover: #334155; /* slate-700 */
+  --sidebar-width-expanded: 16rem;
+  --sidebar-width-collapsed: 4rem;
+  --transition-duration: 0.2s;
+}
+
+.sidebar {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-fg);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: width var(--transition-duration) ease;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-width-collapsed);
+}
+
+.sidebar.expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+.logo {
+  padding: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo img {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+.nav-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-duration);
+}
+
+.nav-item:hover {
+  background: var(--sidebar-hover);
+}
+
+.nav-item .label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar.collapsed .nav-item .label {
+  display: none;
+}
+
+.footer {
+  padding: 1rem;
+  border-top: 1px solid #334155;
+}
+
+.footer .footer-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  cursor: pointer;
+  color: var(--sidebar-fg);
+}
+
+.footer .footer-link:hover {
+  color: #fff;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--sidebar-fg);
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: auto;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.profile-section .name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .profile-section .name {
+  display: none;
+}
