@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Briefcase } from "lucide-react"
+import { currentUser } from "@clerk/nextjs/server"
 
 import { SignOutButton } from "@/components/auth/sign-out-button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -16,26 +17,49 @@ import {
 import { createClient } from "@/lib/supabase/server"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.getClaims()
+  const user = await currentUser()
 
-  if (error || !data?.claims) {
+  if (!user) {
     redirect("/sign-in")
   }
 
-  const userId = data.claims.sub as string
-  const email = data.claims.email as string | undefined
+  const userId = user.id
+  const email = user.emailAddresses[0]?.emailAddress
+  const supabase = await createClient()
 
-  const { data: profile } = await supabase
+  // Fetch or lazy-create profile
+  let profile = null
+  const { data: existingProfile, error: profileError } = await supabase
     .from("profiles")
     .select("full_name, avatar_url")
     .eq("id", userId)
-    .single()
+    .maybeSingle()
+
+  if (!existingProfile && !profileError) {
+    const fallbackName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.username || "User"
+    const fallbackAvatar = user.imageUrl
+    const { data: newProfile, error: insertError } = await supabase
+      .from("profiles")
+      .insert({
+        id: userId,
+        email: email || null,
+        full_name: fallbackName,
+        avatar_url: fallbackAvatar || null,
+      })
+      .select("full_name, avatar_url")
+      .single()
+
+    if (!insertError) {
+      profile = newProfile
+    }
+  } else {
+    profile = existingProfile
+  }
 
   const displayName =
     profile?.full_name ||
-    (data.claims.user_metadata as { full_name?: string } | undefined)
-      ?.full_name ||
+    `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
+    user.username ||
     email?.split("@")[0] ||
     "User"
 
@@ -45,6 +69,7 @@ export default async function DashboardPage() {
     .join("")
     .slice(0, 2)
     .toUpperCase()
+
 
   return (
     <div className="min-h-full bg-muted/30">
