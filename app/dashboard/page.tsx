@@ -12,60 +12,60 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/server"
+import { OnboardingWrapper } from "@/components/onboarding/OnboardingWrapper"
 
 export default async function DashboardPage() {
   const user = await currentUser()
 
   if (!user) {
-    redirect("/sign-in")
+    redirect("/")
   }
 
   const userId = user.id
-  const email = user.emailAddresses[0]?.emailAddress
+  const email = user.emailAddresses[0]?.emailAddress ?? null
+  const fallbackName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.username || "User"
+  const fallbackAvatar = user.imageUrl ?? null
+
   const supabase = await createClient()
 
-  // Fetch or lazy-create profile
-  let profile = null
-  const { data: existingProfile, error: profileError } = await supabase
+  // Try to fetch existing profile by Clerk user ID
+  const { data: existingProfile, error: fetchError } = await supabase
     .from("profiles")
-    .select("full_name, avatar_url")
+    .select("*")
     .eq("id", userId)
     .maybeSingle()
 
-  if (profileError) {
-    console.error("Supabase profile fetch error:", {
-      message: profileError.message,
-      code: profileError.code,
-      details: profileError.details,
-      hint: profileError.hint,
-    })
+  if (fetchError) {
+    console.error("Supabase profile fetch error:", JSON.stringify(fetchError))
   }
 
-  if (!existingProfile && !profileError) {
-    const fallbackName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.username || "User"
-    const fallbackAvatar = user.imageUrl
-    
-    console.log("No existing profile found. Inserting profile for:", userId)
+  let profile = existingProfile
+
+  if (!existingProfile && !fetchError) {
+    // No profile yet — create or update one using upsert to avoid duplicate key issues
+    console.log("No existing profile found. Creating/syncing profile for:", userId)
     const { data: newProfile, error: insertError } = await supabase
       .from("profiles")
-      .insert({
+      .upsert({
         id: userId,
-        email: email || null,
+        email,
         full_name: fallbackName,
-        avatar_url: fallbackAvatar || null,
+        avatar_url: fallbackAvatar,
+        updated_at: new Date().toISOString(),
       })
-      .select("full_name, avatar_url")
+      .select("*")
       .single()
 
     if (insertError) {
-      console.error("Supabase profile insert error:", insertError)
+      console.error("Supabase profile upsert error:", JSON.stringify(insertError))
     } else {
       profile = newProfile
-      console.log("Successfully created profile in Supabase:", profile)
+      console.log("Successfully synced profile:", profile)
     }
-  } else {
-    profile = existingProfile
   }
+
+  // If the user has not uploaded a resume yet, force onboarding dialog
+  const showOnboarding = !profile || !profile.resume_url
 
   const displayName =
     profile?.full_name ||
@@ -113,6 +113,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-full">
+      {showOnboarding && (
+        <OnboardingWrapper />
+      )}
       {/* ── Top header bar ── */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -133,7 +136,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </div>
       </div>
 

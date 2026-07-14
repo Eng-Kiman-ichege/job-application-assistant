@@ -20,6 +20,21 @@ export type Database = {
           full_name: string | null
           id: string
           updated_at: string
+          phone: string | null
+          location: string | null
+          title: string | null
+          website: string | null
+          linkedin: string | null
+          github: string | null
+          professional_summary: string | null
+          skills: Json | null
+          experience: Json | null
+          education: Json | null
+          projects: Json | null
+          certifications: Json | null
+          resume_url: string | null
+          resume_file_name: string | null
+          profile_completeness: number | null
         }
         Insert: {
           avatar_url?: string | null
@@ -28,6 +43,21 @@ export type Database = {
           full_name?: string | null
           id: string
           updated_at?: string
+          phone?: string | null
+          location?: string | null
+          title?: string | null
+          website?: string | null
+          linkedin?: string | null
+          github?: string | null
+          professional_summary?: string | null
+          skills?: Json | null
+          experience?: Json | null
+          education?: Json | null
+          projects?: Json | null
+          certifications?: Json | null
+          resume_url?: string | null
+          resume_file_name?: string | null
+          profile_completeness?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -36,8 +66,60 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+          phone?: string | null
+          location?: string | null
+          title?: string | null
+          website?: string | null
+          linkedin?: string | null
+          github?: string | null
+          professional_summary?: string | null
+          skills?: Json | null
+          experience?: Json | null
+          education?: Json | null
+          projects?: Json | null
+          certifications?: Json | null
+          resume_url?: string | null
+          resume_file_name?: string | null
+          profile_completeness?: number | null
         }
         Relationships: []
+      }
+      resume_files: {
+        Row: {
+          id: string
+          user_id: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          parsed: boolean | null
+          uploaded_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          parsed?: boolean | null
+          uploaded_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          parsed?: boolean | null
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_files_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
